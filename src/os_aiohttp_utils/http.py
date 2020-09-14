@@ -10,7 +10,7 @@ async def request(
     method,
     url,
     timeout=sentinel,
-    retry_attempt=0,
+    retry_attempts=0,
     retry_wait=0,
     retry_reraise=False,
     retry_exceptions=None,
@@ -21,8 +21,8 @@ async def request(
 ):
 
     retry_kwargs = {}
-    if retry_attempt > 0:
-        retry_kwargs["stop"] = stop_after_attempt(retry_attempt + 1)
+    if retry_attempts > 0:
+        retry_kwargs["stop"] = stop_after_attempt(retry_attempts + 1)
     if retry_wait > 0:
         retry_kwargs["wait"] = wait_fixed(retry_wait)
     if retry_exceptions:
