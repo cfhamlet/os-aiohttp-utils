@@ -66,7 +66,9 @@ async def request(
         kwargs = copy.copy(kwargs)
         kwargs["data"] = data
 
-    if isinstance(timeout, (int, float)) and timeout > 0:
+    if timeout is None:
+        timeout = sentinel
+    elif isinstance(timeout, (int, float)) and timeout > 0:
         timeout = aiohttp.ClientTimeout(total=timeout)
 
     async def _do():
