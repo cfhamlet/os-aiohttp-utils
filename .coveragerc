@@ -1,0 +1,10 @@
+[run]
+parallel = true
+branch = true
+source = os_aiohttp_utils
+
+[paths]
+source =
+    src/os_aiohttp_utils
+    .tox/*/lib/python*/site-packages/os_aiohttp_utils
+    .tox/*/site-packages/os_aiohttp_utils
