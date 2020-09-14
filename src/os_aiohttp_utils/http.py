@@ -1,4 +1,5 @@
 import copy
+import inspect
 import io
 
 import aiohttp
@@ -17,6 +18,8 @@ async def request(
     downstream=None,
     text_body=False,
     chunk_size=1 * 1024 * 1024,
+    callback=None,
+    errback=None,
     **kwargs,
 ):
 
@@ -71,33 +74,39 @@ async def request(
     elif isinstance(timeout, (int, float)) and timeout > 0:
         timeout = aiohttp.ClientTimeout(total=timeout)
 
-    async def _do():
-        body = None
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with aiohttp.request(method, url, **kwargs) as response:
-                if not downstream:
-                    func = "read"
-                    if text_body:
-                        func = "text"
-                    body = await getattr(response, func)()
-                else:
-                    while True:
-                        block = await response.content.read(chunk_size)
-                        if not block:
-                            break
-                        downstream.write(block)
-                return response, body
-
     async def do():
+        body, response = None, None
         try:
-            return await _do()
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with aiohttp.request(method, url, **kwargs) as response:
+                    if not downstream:
+                        func = "read"
+                        if text_body:
+                            func = "text"
+                        body = await getattr(response, func)()
+                    else:
+                        while True:
+                            block = await response.content.read(chunk_size)
+                            if not block:
+                                break
+                            downstream.write(block)
+                    if callback:
+                        cb = callback(response, body)
+                        if inspect.isawaitable(cb):
+                            await cb
         except Exception as e:
             if retry_kwargs:
                 if downstream:
                     downstream.reset(truncate=True)
                 if isinstance(data, StreamWrapper):
                     data.reset()
-            raise e
+            if errback:
+                eb = errback(response, body, e)
+                if inspect.isawaitable(eb):
+                    await eb
+            else:
+                raise e
+        return response, body
 
     f = do
     if retry_kwargs:
