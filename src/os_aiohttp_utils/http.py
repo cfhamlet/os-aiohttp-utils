@@ -24,14 +24,14 @@ async def request(
 ):
 
     retry_kwargs = {}
-    if retry_attempts > 0:
-        retry_kwargs["stop"] = stop_after_attempt(retry_attempts + 1)
     if retry_wait > 0:
         retry_kwargs["wait"] = wait_fixed(retry_wait)
     if retry_exceptions:
         retry_kwargs["retry"] = retry_if_exception_type(retry_exceptions)
     if retry_reraise:
         retry_kwargs["reraise"] = True
+    if retry_attempts > 0 or retry_kwargs:
+        retry_kwargs["stop"] = stop_after_attempt(retry_attempts + 1)
 
     def ensure(obj, *attrs):
         for a in attrs:
