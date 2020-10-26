@@ -78,7 +78,7 @@ async def request(
         body, response = None, None
         try:
             async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with aiohttp.request(method, url, **kwargs) as response:
+                async with session.request(method, url, **kwargs) as response:
                     if not downstream:
                         func = "read"
                         if text_body:
