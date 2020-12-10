@@ -71,8 +71,11 @@ async def request(
 
     if timeout is None:
         timeout = sentinel
-    elif isinstance(timeout, (int, float)) and timeout > 0:
-        timeout = aiohttp.ClientTimeout(total=timeout)
+    elif isinstance(timeout, (int, float)):
+        if timeout <= 0:
+            timeout = sentinel
+        else:
+            timeout = aiohttp.ClientTimeout(total=timeout)
 
     async def do():
         body, response = None, None
